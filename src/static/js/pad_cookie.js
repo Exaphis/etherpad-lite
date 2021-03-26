@@ -64,4 +64,8 @@ exports.padcookie = new class {
       [prefName]: value,
     });
   }
+
+  clear() {
+    this.writePrefs_({});
+  }
 }();

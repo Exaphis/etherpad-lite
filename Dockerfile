@@ -13,7 +13,7 @@ LABEL maintainer="Etherpad team, https://github.com/ether/etherpad-lite"
 #
 # EXAMPLE:
 #   ETHERPAD_PLUGINS="ep_codepad ep_author_neat"
-ARG ETHERPAD_PLUGINS=
+ARG ETHERPAD_PLUGINS="ep_comments_page ep_font_family ep_font_size ep_author_neat"
 
 # Control whether abiword will be installed, enabling exports to DOC/PDF/ODT formats.
 # By default, it is not installed.
@@ -29,7 +29,7 @@ ARG INSTALL_ABIWORD=
 #
 # EXAMPLE:
 #   INSTALL_LIBREOFFICE=true
-ARG INSTALL_SOFFICE=
+ARG INSTALL_SOFFICE=true
 
 # By default, Etherpad container is built and run in "production" mode. This is
 # leaner (development dependencies are not installed) and runs faster (among
@@ -78,7 +78,7 @@ RUN [ -z "${ETHERPAD_PLUGINS}" ] || npm install ${ETHERPAD_PLUGINS}
 COPY --chown=etherpad:etherpad ./settings.json.docker "${EP_DIR}"/settings.json
 
 # Fix group permissions
-RUN chmod -R g=u .
+# RUN chmod -R g=u .
 
 EXPOSE 9001
 CMD ["node", "src/node/server.js"]

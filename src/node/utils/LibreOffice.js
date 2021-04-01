@@ -106,6 +106,10 @@ exports.convertFile = async (srcFile, destFile, type) => {
     const intermediateFile = destFile.replace(/\.doc$/, '.odt');
     await queue.pushAsync({srcFile, destFile: intermediateFile, type: 'odt', fileExtension: 'odt'});
     await queue.pushAsync({srcFile: intermediateFile, destFile, type, fileExtension});
+  } else if (type === 'docx') {
+    const intermediateFile = destFile.replace(/\.docx$/, '.odt');
+    await queue.pushAsync({srcFile, destFile: intermediateFile, type: 'odt', fileExtension: 'odt'});
+    await queue.pushAsync({srcFile: intermediateFile, destFile, type, fileExtension});
   } else {
     await queue.pushAsync({srcFile, destFile, type, fileExtension});
   }

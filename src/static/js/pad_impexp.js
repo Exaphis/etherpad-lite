@@ -150,13 +150,13 @@ const padimpexp = (() => {
       } else if (clientVars.exportAvailable === 'withoutPDF') {
         $('#exportpdfa').remove();
 
-        $('#exportworda').attr('href', `${padRootPath}/export/doc`);
+        $('#exportworda').attr('href', `${padRootPath}/export/docx`);
         $('#exportopena').attr('href', `${padRootPath}/export/odt`);
 
         $('#importexport').css({height: '142px'});
         $('#importexportline').css({height: '142px'});
       } else {
-        $('#exportworda').attr('href', `${padRootPath}/export/doc`);
+        $('#exportworda').attr('href', `${padRootPath}/export/docx`);
         $('#exportpdfa').attr('href', `${padRootPath}/export/pdf`);
         $('#exportopena').attr('href', `${padRootPath}/export/odt`);
       }

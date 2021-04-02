@@ -54,6 +54,9 @@ RUN [ -z "${INSTALL_ABIWORD}" ] || (apt update && apt -y install abiword && apt 
 # the mkdir is needed for configuration of openjdk-11-jre-headless, see https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=863199
 RUN [ -z "${INSTALL_SOFFICE}" ] || (apt update && mkdir -p /usr/share/man/man1 && apt -y install libreoffice && apt clean && rm -rf /var/lib/apt/lists/*)
 
+# install git for custom plugins later
+RUN apt update && apt -y install git && apt clean && rm -rf /var/lib/apt/lists/*
+
 USER etherpad
 
 WORKDIR "${EP_DIR}"
@@ -70,8 +73,8 @@ RUN src/bin/installDeps.sh && \
 #
 # EXAMPLE:
 #   ETHERPAD_PLUGINS="ep_codepad ep_author_neat"
-ARG ETHERPAD_PLUGINS="ep_comments_page ep_font_family ep_font_size Exaphis/ep_restore_revision"
 
+ARG ETHERPAD_PLUGINS="ep_comments_page ep_font_family ep_font_size ./ep_restore_revision"
 RUN [ -z "${ETHERPAD_PLUGINS}" ] || npm install ${ETHERPAD_PLUGINS}
 
 # Copy the configuration file.

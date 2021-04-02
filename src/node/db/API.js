@@ -146,6 +146,98 @@ exports.getRevisionChangeset = async (padID, rev) => {
 };
 
 /**
+ restoreRevision(padID, [rev]) Restores revision from past as new changeset
+ Example returns:
+ {code:0, message:"ok", data:null}
+ {code: 1, message:"padID does not exist", data: null}
+ */
+exports.restoreRevision = async (padID, rev) => {
+  //check if rev is a number
+  if (rev !== undefined && typeof rev != "number")
+  {
+    //try to parse the number
+    if (!isNaN(parseInt(rev)))
+    {
+      rev = parseInt(rev);
+    }
+    else
+    {
+      throw new CustomError("rev is not a number", "apierror");
+    }
+  }
+
+  //ensure this is not a negativ number
+  if (rev !== undefined && rev < 0)
+  {
+    throw new CustomError("rev is a negativ number", "apierror");
+  }
+
+  //ensure this is not a float value
+  if (rev !== undefined && !is_int(rev))
+  {
+    throw new CustomError("rev is a float value", "apierror");
+  }
+
+  //get the pad
+  const pad = await getPadSafe(padID, true);
+  //check if this is a valid revision
+  if (rev > pad.getHeadRevisionNumber())
+  {
+    throw new CustomError("rev is higher than the head revision of the pad", "apierror");
+  }
+
+  const atext = await pad.getInternalRevisionAText(rev);
+
+  var oldText = pad.text();
+  atext.text += "\n";
+  function eachAttribRun(attribs, func)
+  {
+    var attribsIter = Changeset.opIterator(attribs);
+    var textIndex = 0;
+    var newTextStart = 0;
+    var newTextEnd = atext.text.length;
+    while (attribsIter.hasNext())
+    {
+      var op = attribsIter.next();
+      var nextIndex = textIndex + op.chars;
+      if (!(nextIndex <= newTextStart || textIndex >= newTextEnd))
+      {
+        func(Math.max(newTextStart, textIndex), Math.min(newTextEnd, nextIndex), op.attribs);
+      }
+      textIndex = nextIndex;
+    }
+  }
+
+  // create a new changeset with a helper builder object
+  var builder = Changeset.builder(oldText.length);
+
+  // assemble each line into the builder
+  eachAttribRun(atext.attribs, function (start, end, attribs)
+  {
+    builder.insert(atext.text.substring(start, end), attribs);
+  });
+
+  var lastNewlinePos = oldText.lastIndexOf('\n');
+  if (lastNewlinePos < 0)
+  {
+    builder.remove(oldText.length - 1, 0);
+  } else
+  {
+    builder.remove(lastNewlinePos, oldText.match(/\n/g).length - 1);
+    builder.remove(oldText.length - lastNewlinePos - 1, 0);
+  }
+
+  var changeset = builder.toString();
+
+  //append the changeset
+
+  await Promise.all([
+    pad.appendRevision(changeset),
+    padMessageHandler.updatePadClients(pad)
+  ]);
+};
+
+/**
 getText(padID, [rev]) returns the text of a pad
 
 Example returns:

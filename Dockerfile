@@ -7,14 +7,6 @@
 FROM node:14-buster-slim
 LABEL maintainer="Etherpad team, https://github.com/ether/etherpad-lite"
 
-# plugins to install while building the container. By default no plugins are
-# installed.
-# If given a value, it has to be a space-separated, quoted list of plugin names.
-#
-# EXAMPLE:
-#   ETHERPAD_PLUGINS="ep_codepad ep_author_neat"
-ARG ETHERPAD_PLUGINS="ep_comments_page ep_font_family ep_font_size"
-
 # Control whether abiword will be installed, enabling exports to DOC/PDF/ODT formats.
 # By default, it is not installed.
 # If given any value, abiword will be installed.
@@ -71,6 +63,14 @@ COPY --chown=etherpad:etherpad ./ ./
 # install node dependencies for Etherpad
 RUN src/bin/installDeps.sh && \
 	rm -rf ~/.npm/_cacache
+
+# plugins to install while building the container. By default no plugins are
+# installed.
+# If given a value, it has to be a space-separated, quoted list of plugin names.
+#
+# EXAMPLE:
+#   ETHERPAD_PLUGINS="ep_codepad ep_author_neat"
+ARG ETHERPAD_PLUGINS="ep_comments_page ep_font_family ep_font_size Exaphis/ep_restore_revision"
 
 RUN [ -z "${ETHERPAD_PLUGINS}" ] || npm install ${ETHERPAD_PLUGINS}
 

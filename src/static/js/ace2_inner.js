@@ -111,9 +111,9 @@ function Ace2Inner(editorInfo, cssManagers) {
       }
 
       if (prevSel.selStart !== prevSel.selEnd) {
-        top.console.log('clearing authorship:');
-        top.console.log(prevSel.selStart);
-        top.console.log(prevSel.selEnd);
+        //top.console.log('clearing authorship:');
+        //top.console.log(prevSel.selStart);
+        //top.console.log(prevSel.selEnd);
 
         documentAttributeManager.setAttributesOnRange(prevSel.selStart, prevSel.selEnd, [
           ['author', ''],

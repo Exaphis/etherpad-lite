@@ -100,6 +100,35 @@ function Ace2Inner(editorInfo, cssManagers) {
     apool: new AttribPool(),
   };
 
+  const prevSel = {
+    selStart: null,
+    selEnd: null
+  }
+  function setSelectionAuthorship() {
+    inCallStackIfNecessary('setSelectionAuthorship', () => {
+      if (rep.selStart === null || rep.selEnd === null) {
+        return;
+      }
+
+      if (prevSel.selStart !== prevSel.selEnd) {
+        top.console.log('clearing authorship:');
+        top.console.log(prevSel.selStart);
+        top.console.log(prevSel.selEnd);
+
+        documentAttributeManager.setAttributesOnRange(prevSel.selStart, prevSel.selEnd, [
+          ['author', ''],
+        ]);
+      }
+
+      if (rep.selStart !== rep.selEnd) {
+        setAttributeOnSelection('author', thisAuthor);
+      }
+    });
+
+    prevSel.selStart = rep.selStart;
+    prevSel.selEnd = rep.selEnd;
+  }
+
   // lines, alltext, alines, and DOM are set up in init()
   if (undoModule.enabled) {
     undoModule.apool = rep.apool;
@@ -1959,9 +1988,10 @@ function Ace2Inner(editorInfo, cssManagers) {
         }
 
         let isNewTextMultiauthor = false;
-        const authorAtt = Changeset.makeAttribsString('+', (thisAuthor ? [
-          ['author', thisAuthor],
-        ] : []), rep.apool);
+        //const authorAtt = Changeset.makeAttribsString('+', (thisAuthor ? [
+        //  ['author', thisAuthor],
+        //] : []), rep.apool);
+        const authorAtt = Changeset.makeAttribsString('+', [], rep.apool);  //remove author attribute
         const authorizer = cachedStrFunc((oldAtts) => {
           if (isNewTextMultiauthor) {
             // prefer colors from DOM
@@ -2156,6 +2186,8 @@ function Ace2Inner(editorInfo, cssManagers) {
         callstack: currentCallStack,
         documentAttributeManager,
       });
+
+      setSelectionAuthorship();
 
       // we scroll when user places the caret at the last line of the pad
       // when this settings is enabled

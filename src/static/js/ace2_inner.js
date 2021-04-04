@@ -104,23 +104,43 @@ function Ace2Inner(editorInfo, cssManagers) {
     selStart: null,
     selEnd: null
   }
+
+  function fixSel(selRange) {
+    // return a new range that is in bounds of the selected line
+    // if the line is invalid, then set it to the end
+    let newRange = [0, 0];
+
+    const numLines = rep.lines.length();
+    if (selRange[0] >= numLines) {
+      const lastLineLen = rep.lines.atIndex(numLines - 1).width;
+      return [numLines - 1, lastLineLen - 1];
+    }
+
+    newRange[0] = selRange[0];
+    let line = rep.lines.atIndex(selRange[0]);
+    newRange[1] = Math.min(selRange[1], line.width - 1);
+    return newRange;
+  }
+
   function setSelectionAuthorship() {
-    inCallStackIfNecessary('setSelectionAuthorship', () => {
+    inCallStackIfNecessary('setSelectionauthorship', () => {
       if (rep.selStart === null || rep.selEnd === null) {
         return;
       }
+      // top.console.log(rep.selEnd);
 
       if (prevSel.selStart !== prevSel.selEnd) {
-        //top.console.log('clearing authorship:');
-        //top.console.log(prevSel.selStart);
-        //top.console.log(prevSel.selEnd);
+        let fixedStart = fixSel(prevSel.selStart);
+        let fixedEnd = fixSel(prevSel.selEnd);
 
-        documentAttributeManager.setAttributesOnRange(prevSel.selStart, prevSel.selEnd, [
-          ['author', ''],
-        ]);
+        if (fixedStart[0] !== fixedEnd[0] || fixedStart[1] !== fixedEnd[1]) {
+          documentAttributeManager.setAttributesOnRange(fixedStart, fixedEnd, [
+            ['author', ''],
+          ]);
+        }
       }
 
-      if (rep.selStart !== rep.selEnd) {
+      if (rep.selStart[0] !== rep.selEnd[0] || rep.selStart[1] !== rep.selEnd[1]) {
         setAttributeOnSelection('author', thisAuthor);
       }
     });
@@ -402,6 +422,8 @@ function Ace2Inner(editorInfo, cssManagers) {
         rep,
         documentAttributeManager,
       });
+
+      setSelectionAuthorship();
 
       cleanExit = true;
     } catch (e) {
@@ -1987,39 +2009,43 @@ function Ace2Inner(editorInfo, cssManagers) {
           builder.remove(spliceEnd - spliceStart);
         }
 
-        let isNewTextMultiauthor = false;
-        //const authorAtt = Changeset.makeAttribsString('+', (thisAuthor ? [
+        //let isNewTextMultiauthor = false;
+        //let authorAtt = Changeset.makeAttribsString('+', (thisAuthor ? [
         //  ['author', thisAuthor],
         //] : []), rep.apool);
-        const authorAtt = Changeset.makeAttribsString('+', [], rep.apool);  //remove author attribute
-        const authorizer = cachedStrFunc((oldAtts) => {
-          if (isNewTextMultiauthor) {
-            // prefer colors from DOM
-            return Changeset.composeAttributes(authorAtt, oldAtts, true, rep.apool);
-          } else {
-            // use this author's color
-            return Changeset.composeAttributes(oldAtts, authorAtt, true, rep.apool);
-          }
-        });
+        //top.console.log(authorAtt);
+        //top.console.log(thisAuthor);
 
-        let foundDomAuthor = '';
-        eachAttribRun(newAttribs, (start, end, attribs) => {
-          const a = Changeset.attribsAttributeValue(attribs, 'author', rep.apool);
-          if (a && a !== foundDomAuthor) {
-            if (!foundDomAuthor) {
-              foundDomAuthor = a;
-            } else {
-              isNewTextMultiauthor = true; // multiple authors in DOM!
-            }
-          }
-        });
+        //authorAtt = Changeset.makeAttribsString('+', [], rep.apool);  //remove author attribute
+
+        // const authorizer = cachedStrFunc((oldAtts) => {
+        //   if (isNewTextMultiauthor) {
+        //     // prefer colors from DOM
+        //     return Changeset.composeAttributes(authorAtt, oldAtts, true, rep.apool);
+        //   } else {
+        //     // use this author's color
+        //     return Changeset.composeAttributes(oldAtts, authorAtt, true, rep.apool);
+        //   }
+        // });
+
+        // let foundDomAuthor = '';
+        // eachAttribRun(newAttribs, (start, end, attribs) => {
+        //   const a = Changeset.attribsAttributeValue(attribs, 'author', rep.apool);
+        //   if (a && a !== foundDomAuthor) {
+        //     if (!foundDomAuthor) {
+        //       foundDomAuthor = a;
+        //     } else {
+        //       isNewTextMultiauthor = true; // multiple authors in DOM!
+        //     }
+        //   }
+        // });
 
         if (shiftFinalNewlineToBeforeNewText) {
-          builder.insert('\n', authorizer(''));
+          builder.insert('\n', '');
         }
 
         eachAttribRun(newAttribs, (start, end, attribs) => {
-          builder.insert(newText.substring(start, end), authorizer(attribs));
+          builder.insert(newText.substring(start, end), attribs);
         });
         theChangeset = builder.toString();
       }
@@ -2186,8 +2212,6 @@ function Ace2Inner(editorInfo, cssManagers) {
         callstack: currentCallStack,
         documentAttributeManager,
       });
-
-      setSelectionAuthorship();
 
       // we scroll when user places the caret at the last line of the pad
       // when this settings is enabled

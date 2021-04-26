@@ -211,6 +211,10 @@ const padeditbar = (function () {
         return;
       }
 
+      if (self.dropdowns === undefined) {
+        return;
+      }
+
       $('.nice-select').removeClass('open');
       $('.toolbar-popup').removeClass('popup-show');
 
